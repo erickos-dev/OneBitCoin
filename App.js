@@ -1,21 +1,115 @@
-import { StatusBar } from 'expo-status-bar';
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useState, useEffect } from 'react';
+
+import { StyleSheet, Text, View, SafeAreaView, StatusBar } from 'react-native';
+
+import CurrentPrice from './src/components/CurrentPrice/';
+import HistoryGraphic from './src/components/HistoryGraphic/';
+import QuotationList from './src/components/QuotationList/';
+import QuotationItems from './src/components/QuotationList/QuotationItems';
+
+
+//https://api.coindesk.com/v1/bpi/historical/close.json?start=2013-09-01&end=2013-09-05
+
+
+function addZero(number) {
+  if (number <= 9) {
+    return "0" + number;
+  } else {
+    return number;
+  };
+};
+
+function url(qtdDays) {
+  const date = new Date();
+  const listLastDays = qtdDays;
+  const startDate =
+    `${date.getFullYear()}-${addZero(date.getMonth() + 1)}-${addZero(date.getDay())}`;
+  date.setDate(date.getDate() - listLastDays);
+
+  const endDate =
+    `${date.getFullYear()}-${addZero(date.getMonth() + 1)}-${addZero(date.getDay())}`;
+
+  return `https://api.coindesk.com/v1/bpi/historical/close.json?
+  start=${startDate}&end=${endDate}`
+};
+
+async function getListCoin(url) {
+  console.log("🚀 ~ file: App.js ~ line 38 ~ getListCoin ~ url", url)
+  let response = await fetch(url);
+  console.log("🚀 ~ file: App.js ~ line 39 ~ getListCoin ~ response", response)
+  let returnApi = await response.json();
+  let selectListQuotations = returnApi.bpi;
+  const queryCoinsList = Object.keys(selectListQuotations).map((key) => {
+    return {
+      data: key.split('-').reverse().join('/'),
+      valor: selectListQuotations[key]
+    }
+  })
+  let data = queryCoinsList.reverse();
+
+  return data;
+}
+
+async function getPriceCoinsGraphic(url) {
+  console.log("🚀 ~ file: App.js ~ line 54 ~ getPriceCoinsGraphic ~ url", url)
+  let responseG = await fetch(url);
+  console.log("🚀 ~ file: App.js ~ line 55 ~ getPriceCoinsGraphic ~ responseG", responseG)
+  let returnApiG = await responseG.json();
+  let selectListQuotationsG = returnApiG.bpi;
+  const queryCoinsList = Object.keys(selectListQuotationsG).map((key) => {
+    selectListQuotationsG[key]
+  });
+  let dataG = queryCoinsList;
+  return dataG;
+}
+
 
 export default function App() {
+
+  const [coinList, setCoinsList] = useState([]);
+  const [coinsGraphicList, setCoinsGraphicList] = useState([0]);
+  const [days, setDays] = useState(30);
+  const [updateData, setUpdateData] = useState(true);
+
+  function updateDay(number) {
+    setDays(number);
+    setUpdateData(true);
+  }
+
+  useEffect(() => {
+    getListCoin(url(days)).then((data) => {
+      console.log("🚀 ~ file: App.js ~ line 78 ~ getListCoin ~ data", data)
+      setCoinsList(data)
+    });
+
+    getPriceCoinsGraphic(url(days)).then((dataG) => {
+      setCoinsGraphicList(dataG)
+    })
+    if (updateData) {
+      setUpdateData(false)
+    }
+  }, [updateData]);
+
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <SafeAreaView style={styles.container}>
+
+      <StatusBar
+        backgroundColor="#f50d41"
+        barStyle="ligth.content" />
+      <CurrentPrice />
+
+      <HistoryGraphic />
+      <QuotationList />
+      <QuotationItems />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#000000',
     alignItems: 'center',
-    justifyContent: 'center',
+    paddingTop: Platform.OS === "android" ? 40 : 0
   },
 });
