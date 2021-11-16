@@ -22,21 +22,20 @@ function addZero(number) {
 function url(qtdDays) {
   const date = new Date();
   const listLastDays = qtdDays;
-  const startDate =
-    `${date.getFullYear()}-${addZero(date.getMonth() + 1)}-${addZero(date.getDay())}`;
-  date.setDate(date.getDate() - listLastDays);
+  const startDate = `${date.getFullYear()}-${addZero(date.getMonth() + 1)}-${addZero(date.getDay())}`;
 
-  const endDate =
-    `${date.getFullYear()}-${addZero(date.getMonth() + 1)}-${addZero(date.getDay())}`;
+  date.setDate(date.getDay() - listLastDays);
 
-  return `https://api.coindesk.com/v1/bpi/historical/close.json?
-  start=${startDate}&end=${endDate}`
+  const endDate = `${date.getFullYear()}-${addZero(date.getMonth() + 1)}-${addZero(date.getDay())}`;
+
+  return `https://api.coindesk.com/v1/bpi/historical/close.json?start=${endDate}&end=${startDate}`
 };
 
 async function getListCoin(url) {
-  console.log("🚀 ~ file: App.js ~ line 38 ~ getListCoin ~ url", url)
+console.log("🚀 ~ file: App.js ~ line 35 ~ getListCoin ~ url", url)
+  
   let response = await fetch(url);
-  console.log("🚀 ~ file: App.js ~ line 39 ~ getListCoin ~ response", response)
+
   let returnApi = await response.json();
   let selectListQuotations = returnApi.bpi;
   const queryCoinsList = Object.keys(selectListQuotations).map((key) => {
@@ -46,20 +45,23 @@ async function getListCoin(url) {
     }
   })
   let data = queryCoinsList.reverse();
+  // console.log("🚀 ~ file: App.js ~ line 49 ~ getListCoin ~ data", data)
 
   return data;
 }
 
 async function getPriceCoinsGraphic(url) {
-  console.log("🚀 ~ file: App.js ~ line 54 ~ getPriceCoinsGraphic ~ url", url)
+  // console.log("🚀 ~ file: App.js ~ line 54 ~ getPriceCoinsGraphic ~ url", url)
   let responseG = await fetch(url);
-  console.log("🚀 ~ file: App.js ~ line 55 ~ getPriceCoinsGraphic ~ responseG", responseG)
+  // console.log("🚀 ~ file: App.js ~ line 55 ~ getPriceCoinsGraphic ~ responseG", responseG)
   let returnApiG = await responseG.json();
+  // console.log("🚀 ~ file: App.js ~ line 58 ~ getPriceCoinsGraphic ~ returnApiG", returnApiG)
   let selectListQuotationsG = returnApiG.bpi;
   const queryCoinsList = Object.keys(selectListQuotationsG).map((key) => {
-    selectListQuotationsG[key]
+   return selectListQuotationsG[key]
   });
   let dataG = queryCoinsList;
+  // console.log("🚀 ~ file: App.js ~ line 64 ~ getPriceCoinsGraphic ~ dataG", dataG)
   return dataG;
 }
 
@@ -77,9 +79,11 @@ export default function App() {
   }
 
   useEffect(() => {
+    setCoinsList([])
     getListCoin(url(days)).then((data) => {
-      console.log("🚀 ~ file: App.js ~ line 78 ~ getListCoin ~ data", data)
+   
       setCoinsList(data)
+      console.log(coinList);
     });
 
     getPriceCoinsGraphic(url(days)).then((dataG) => {
@@ -95,12 +99,12 @@ export default function App() {
 
       <StatusBar
         backgroundColor="#f50d41"
-        barStyle="ligth.content" />
+        barStyle="ligth.content"
+      />
       <CurrentPrice />
-
       <HistoryGraphic />
-      <QuotationList />
-      <QuotationItems />
+      <QuotationList filterDay={updateDay} listTransactions={coinList}/>
+      
     </SafeAreaView>
   );
 }
